@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家庭常用药 · 食物营养素相互作用查询</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --panel:#ffffff; --ink:#1a1a1a; --ink2:#444;
+    --line:#d9d2c5; --brand:#0b6e4f; --brand-d:#084d37;
+    --avoid:#c62828; --caution:#e65100; --watch:#f9a825; --ok:#2e7d32;
+    --evA:#b71c1c; --evB:#1565c0; --evC:#616161;
+    --pill:#eef3f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Heiti SC",sans-serif;
+    font-size:20px; line-height:1.6; -webkit-text-size-adjust:100%;
+  }
+  header{
+    background:linear-gradient(180deg,var(--brand),var(--brand-d));
+    color:#fff; padding:22px 18px 18px; text-align:center;
+  }
+  header h1{margin:0 0 6px; font-size:30px; letter-spacing:1px;}
+  header p{margin:0; font-size:18px; opacity:.95;}
+  .notice{
+    background:#fff4e5; border:2px solid var(--caution); color:#5d3000;
+    margin:14px auto 0; max-width:1000px; padding:12px 16px; border-radius:12px;
+    font-size:17px; text-align:left; line-height:1.5;
+  }
+  .notice b{color:var(--caution);}
+  .wrap{max-width:1100px; margin:0 auto; padding:16px;}
+  .tabs{display:flex; gap:12px; justify-content:center; margin:18px 0 10px;}
+  .tab{
+    flex:1 1 0; max-width:420px; cursor:pointer; border:3px solid var(--brand);
+    background:#fff; color:var(--brand); border-radius:16px; padding:18px 10px;
+    font-size:24px; font-weight:700; text-align:center; transition:.15s;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .tab .emo{font-size:30px;}
+  .tab.active{background:var(--brand); color:#fff; box-shadow:0 4px 0 var(--brand-d);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .toolbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:14px 0;}
+  .search{
+    flex:1 1 280px; min-width:240px; font-size:22px; padding:14px 16px;
+    border:3px solid var(--line); border-radius:14px; background:#fff; color:var(--ink);
+  }
+  .search:focus{outline:none; border-color:var(--brand);}
+  select.filter{
+    font-size:20px; padding:12px 14px; border:3px solid var(--line);
+    border-radius:14px; background:#fff; color:var(--ink); max-width:300px;
+  }
+  .count{font-size:17px; color:var(--ink2); margin:6px 2px;}
+  .layout{display:flex; gap:16px; align-items:flex-start;}
+  .list{flex:0 0 320px; max-height:62vh; overflow:auto; background:#fff;
+    border:2px solid var(--line); border-radius:14px; padding:8px;}
+  .list .item{
+    padding:14px 14px; border-radius:10px; cursor:pointer; font-size:20px;
+    border-bottom:1px solid #eee; display:flex; justify-content:space-between; gap:8px;
+  }
+  .list .item:hover{background:var(--pill);}
+  .list .item.sel{background:var(--brand); color:#fff;}
+  .list .item .cat{font-size:14px; opacity:.7;}
+  .list .item.sel .cat{opacity:.9;}
+  .detail{flex:1 1 auto; background:#fff; border:2px solid var(--line);
+    border-radius:14px; padding:18px 20px; min-height:62vh;}
+  .detail h2{margin:0 0 4px; font-size:28px;}
+  .detail .sub{color:var(--ink2); font-size:17px; margin-bottom:14px;}
+  .hint{color:#777; font-size:18px; padding:30px 10px; text-align:center;}
+  .card{
+    border:2px solid var(--line); border-left-width:10px; border-radius:12px;
+    padding:14px 16px; margin:12px 0; background:#fcfbf7;
+  }
+  .card.avoid{border-left-color:var(--avoid);}
+  .card.caution{border-left-color:var(--caution);}
+  .card.watch{border-left-color:var(--watch);}
+  .card.ok{border-left-color:var(--ok);}
+  .card .ttl{font-size:22px; font-weight:700; display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .badge{display:inline-block; font-size:15px; font-weight:700; padding:4px 10px; border-radius:999px; color:#fff;}
+  .b-avoid{background:var(--avoid);}
+  .b-caution{background:var(--caution);}
+  .b-watch{background:var(--watch); color:#3a2a00;}
+  .b-ok{background:var(--ok);}
+  .b-evA{background:var(--evA);}
+  .b-evB{background:var(--evB);}
+  .b-evC{background:var(--evC);}
+  .card .desc{margin-top:8px; font-size:19px; color:var(--ink);}
+  .card .tags{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
+  .tag{font-size:15px; background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:3px 9px; color:var(--ink2);}
+  .legend{margin:12px auto 0; max-width:1000px; font-size:16px; color:var(--ink2); background:#fff; border:2px dashed var(--line); border-radius:12px; padding:12px 16px;}
+  .legend b{color:var(--ink);}
+  footer{text-align:center; color:#888; font-size:15px; padding:24px 10px 40px;}
+  @media (max-width:820px){
+    body{font-size:18px;}
+    .layout{flex-direction:column;}
+    .list{flex:none; width:100%; max-height:38vh;}
+    .detail{min-height:auto;}
+    .tab{font-size:20px; padding:14px 8px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>家庭常用药 · 食物营养素相互作用查询</h1>
+  <p>查药知禁忌，查营养素知冲突</p>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" id="tabDrug" onclick="switchTab('drug')"><span class="emo">💊</span> 查药物</div>
+    <div class="tab" id="tabNut" onclick="switchTab('nut')"><span class="emo">🥗</span> 查营养素 / 食物</div>
+  </div>
+
+  <!-- 重要提醒 + 说明（两端口共用） -->
+  <div class="notice">
+    <b>⚠ 重要提醒：</b>本工具仅作日常参考，<b>不能替代医生或药师的专业指导</b>。药物相互作用因人而异，<b>切勿自行停药、换药或加量</b>。用药有疑问，请务必咨询医师或药师。
+  </div>
+  <div class="legend">
+    <b>风险等级：</b>
+    <span class="badge b-avoid">避免同服</span> 一起用可能有害，尽量隔开或不用 ·
+    <span class="badge b-caution">谨慎 / 隔开</span> 如需同用请间隔或减量 ·
+    <span class="badge b-watch">注意</span> 一般影响不大，留意即可 ·
+    <span class="badge b-ok">通常无碍</span><br>
+    <b>证据等级：</b>
+    <span class="badge b-evA">A 强证据</span> 大量临床证实 ·
+    <span class="badge b-evB">B 中等证据</span> 较多研究/病例支持 ·
+    <span class="badge b-evC">C 理论/个案</span> 多为推测或个例，需关注
+  </div>
+
+  <!-- ============ 药物端口 ============ -->
+  <div class="panel active" id="panelDrug">
+    <div class="toolbar">
+      <input class="search" id="drugSearch" placeholder="输入药名，如：华法林、降压药、他汀" oninput="renderDrugList()">
+      <select class="filter" id="drugCat" onchange="renderDrugList()"></select>
+    </div>
+    <div class="count" id="drugCount"></div>
+    <div class="layout">
+      <div class="list" id="drugList"></div>
+      <div class="detail" id="drugDetail">
+        <div class="hint">← 请在左侧选择或搜索一种药物，查看它与食物、营养素的相互作用及证据等级。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 营养素端口 ============ -->
+  <div class="panel" id="panelNut">
+    <div class="toolbar">
+      <input class="search" id="nutSearch" placeholder="输入营养素或食物，如：钙、铁、柚子、咖啡" oninput="renderNutList()">
+    </div>
+    <div class="count" id="nutCount"></div>
+    <div class="layout">
+      <div class="list" id="nutList"></div>
+      <div class="detail" id="nutDetail">
+        <div class="hint">← 请在左侧选择或搜索一种营养素 / 食物，查看哪些药物与它存在相互作用及证据等级。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  数据来源为公开药学文献与临床用药指南整理（常见相互作用汇编），供社区健康科普参考。
+</footer>
+
+<script>
+/* =========================================================
+   数据集：100 种家庭常用药 × 食物/营养素相互作用
+   severity: avoid(避免) / caution(谨慎) / watch(注意) / ok(通常无碍)
+   evidence: A(强) / B(中) / C(理论或个案)
+   type: food(食物) / nutrient(营养素) / drug(药物组合警示)
+   ========================================================= */
+const DRUGS = [
+  // ---------- 心血管 / 抗凝 ----------
+  {name:"华法林", cat:"抗凝药", alias:["可迈丁","苄丙酮香豆素","warfarin"],
+   inter:[{t:"维生素K",type:"nutrient",sev:"avoid",ev:"A",d:"维生素K会抵消华法林的抗凝作用，让血液更容易凝固。吃深绿色蔬菜（菠菜、油菜）要每天量大致稳定，别忽多忽少。"},
+          {t:"绿叶蔬菜(维K)",type:"food",sev:"avoid",ev:"A",d:"菠菜、西兰花、油菜等含大量维K，大量吃会减弱药效。不是不能吃，而是量要稳定。"},
+          {t:"纳豆",type:"food",sev:"avoid",ev:"A",d:"纳豆维K极高，会明显减弱华法林效果，建议不吃或极少量。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"柚子可能增强抗凝、增加出血。吃少量问题不大，但别经常大量吃。"},
+          {t:"蔓越莓",type:"food",sev:"caution",ev:"B",d:"大量蔓越莓汁可能增强抗凝、增加出血风险，偶尔吃没问题。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"长期或大量饮酒会影响药效并增加出血和肝病风险。"},
+          {t:"大蒜",type:"food",sev:"caution",ev:"B",d:"大蒜、银杏可能轻度增强抗凝，增加出血，手术前尤其要停。"},
+          {t:"银杏",type:"nutrient",sev:"caution",ev:"B",d:"银杏有轻度抗凝作用，与华法林同用出血风险增加。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"大剂量鱼油也有抗凝倾向，建议每日不超过2克并告知医生。"}]},
+
+  {name:"阿司匹林", cat:"抗血小板/解热镇痛", alias:["aspirin","拜阿司匹灵"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"阿司匹林伤胃，喝酒会大幅增加胃出血风险，尽量不喝酒。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"鱼油有抗凝倾向，与阿司匹林同用出血风险略升，适量即可。"},
+          {t:"姜黄",type:"food",sev:"caution",ev:"B",d:"姜黄可能抑制血小板，大量吃与阿司匹林同用出血风险增加。"},
+          {t:"银杏",type:"nutrient",sev:"caution",ev:"B",d:"银杏抗凝，与阿司匹林叠加出血风险升高。"},
+          {t:"维生素C",type:"nutrient",sev:"watch",ev:"C",d:"大剂量维C（>1克/天）可能略影响阿司匹林吸收，常规剂量无碍。"}]},
+
+  {name:"氯吡格雷", cat:"抗血小板药", alias:["波立维","plavix"],
+   inter:[{t:"奥美拉唑",type:"drug",sev:"caution",ev:"B",d:"奥美拉唑会削弱氯吡格雷的活化，降低药效。可换用泮托拉唑等影响小的胃药。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"柚子可能影响代谢，建议少吃。"},
+          {t:"银杏",type:"nutrient",sev:"caution",ev:"B",d:"银杏抗凝，同用出血风险增加。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"大剂量鱼油抗凝倾向，出血风险略升。"}]},
+
+  {name:"阿托伐他汀", cat:"他汀降脂药", alias:["立普妥","atorvastatin"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚会大幅升高他汀血药浓度，增加肌肉损伤（肌病）风险。吃他汀期间最好不吃西柚。"},
+          {t:"红曲",type:"food",sev:"caution",ev:"B",d:"红曲本身含天然他汀，与他汀同吃等于加倍，增加副作用，不建议叠加。"},
+          {t:"辅酶Q10",type:"nutrient",sev:"watch",ev:"B",d:"他汀可能降低体内辅酶Q10，部分人补充后肌肉不适减轻，可酌情补。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"长期饮酒伤肝，与他汀叠加肝负担，建议限酒。"}]},
+
+  {name:"辛伐他汀", cat:"他汀降脂药", alias:["舒降之","simvastatin"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"辛伐他汀最怕西柚，极易引发横纹肌溶解（肌肉坏死），严格不吃西柚。"},
+          {t:"红曲",type:"food",sev:"avoid",ev:"B",d:"红曲含天然他汀，叠加后剂量过大，风险高。"},
+          {t:"辅酶Q10",type:"nutrient",sev:"watch",ev:"B",d:"补充辅酶Q10可能缓解他汀相关肌肉酸痛。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"叠加肝损伤风险，限酒。"}]},
+
+  {name:"瑞舒伐他汀", cat:"他汀降脂药", alias:["可定","rosuvastatin"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"瑞舒伐他汀受西柚影响比阿托、辛伐他汀小，但仍建议少吃。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"长期饮酒增加肝负担，限酒。"},
+          {t:"辅酶Q10",type:"nutrient",sev:"watch",ev:"B",d:"可酌情补充以缓解肌肉不适。"}]},
+
+  {name:"氨氯地平", cat:"降压药(钙拮抗剂)", alias:["络活喜","amlodipine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"A",d:"西柚会增强降压，可能导致血压过低、头晕。建议少吃，监测血压。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"氨氯地平一般不引起高钾，香蕉适量吃无碍；若同时吃保钾药才需注意。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草致低钾、升血压，与降压药相抵，建议不吃甘草制品。"}]},
+
+  {name:"非洛地平", cat:"降压药(钙拮抗剂)", alias:["波依定","felodipine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"非洛地平受西柚影响很强，会大幅降压致头晕，避免西柚。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草升血压、致低钾，抵消药效。"}]},
+
+  {name:"硝苯地平", cat:"降压药(钙拮抗剂)", alias:["心痛定","nifedipine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"A",d:"西柚增强降压，易致低血压头晕，少吃。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草升血压、致低钾，抵消药效。"}]},
+
+  {name:"美托洛尔", cat:"降压药(β受体阻滞剂)", alias:["倍他乐克","metoprolol"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"酒精扩张血管，与β阻滞剂同用易低血压、心跳慢，限酒。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡可能加快心率、升高血压，部分抵消药效，适量。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"一般无碍，若合并保钾利尿或肾不好才需注意。"}]},
+
+  {name:"比索洛尔", cat:"降压药(β受体阻滞剂)", alias:["康可","bisoprolol"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"同用易低血压、乏力，限酒。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草致低钾，影响心脏，建议不吃。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"常规食用通常无碍。"}]},
+
+  {name:"缬沙坦", cat:"降压药(ARB)", alias:["代文","valsartan"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"沙坦类保钾，大量吃香蕉/橙汁/盐替代品易高钾，严重可心慌。每天水果适量，别过量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃太咸会减弱降压效果，控盐很关键。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"饮酒易致低血压头晕。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草致低钾，影响血压控制。"}]},
+
+  {name:"氯沙坦", cat:"降压药(ARB)", alias:["科素亚","losartan"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"同缬沙坦，大量高钾食物易致高钾血症。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"控盐才能发挥药效。"},
+          {t:"布洛芬",type:"drug",sev:"caution",ev:"B",d:"布洛芬等消炎药会减弱沙坦降压并伤肾，尽量少用。"}]},
+
+  {name:"依那普利", cat:"降压药(ACEI)", alias:["依苏","enalapril"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"普利类保钾，大量香蕉/橙汁易高钾，注意适量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃咸了药效差，要控盐。"},
+          {t:"布洛芬",type:"drug",sev:"caution",ev:"B",d:"布洛芬减弱降压并伤肾，感冒止痛尽量避开。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"培哚普利", cat:"降压药(ACEI)", alias:["雅施达","perindopril"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"普利类保钾，大量高钾食物有风险。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"控盐。"},
+          {t:"布洛芬",type:"drug",sev:"caution",ev:"B",d:"消炎药减弱药效伤肾。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"地高辛", cat:"强心药", alias:["洋地黄","digoxin"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"caution",ev:"A",d:"高钾会增强地高辛毒性致心律失常；低钾也危险。血钾要稳，水果适量。"},
+          {t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"补钙过量可能加重地高辛相关心律问题，补钙前问医生。"},
+          {t:"膳食纤维",type:"nutrient",sev:"watch",ev:"B",d:"高纤维饮食略降地高辛吸收，药与饭分开吃更好。"},
+          {t:"圣约翰草",type:"nutrient",sev:"caution",ev:"B",d:"圣约翰草降低地高辛水平，影响疗效。"}]},
+
+  {name:"硝酸甘油", cat:"冠心病/心绞痛药", alias:["nitroglycerin"],
+   inter:[{t:"西地那非类(壮阳药)",type:"drug",sev:"avoid",ev:"A",d:"硝酸甘油+西地那非/他达拉非可致致命性低血压，绝对不能同用（间隔24小时以上也不保险，须遵医嘱）。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"饮酒扩张血管，叠加易晕倒。"},
+          {t:"柚子(西柚)",type:"food",sev:"watch",ev:"C",d:"理论上有影响，少量无碍，避免大量。"}]},
+
+  {name:"单硝酸异山梨酯", cat:"冠心病/心绞痛药", alias:["依姆多","isosorbide"],
+   inter:[{t:"西地那非类(壮阳药)",type:"drug",sev:"avoid",ev:"A",d:"与壮阳药同用可致致命低血压，严禁同用。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压头晕。"}]},
+
+  {name:"呋塞米", cat:"利尿降压药", alias:["速尿","furosemide"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"呋塞米排钾，适量香蕉反而补钾，但肾不好要查血钾。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草致低钾，加重利尿后的低钾。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡因利尿，叠加可能脱水、低钾。"}]},
+
+  {name:"氢氯噻嗪", cat:"利尿降压药", alias:["双克","hctz"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"噻嗪类易低钾，适量香蕉有助补钾；但肾功能差者要监测。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"长期用可能轻度升血钙，补钙前查血。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃咸抵消药效并加重低钾。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压、低钾。"}]},
+
+  {name:"螺内酯", cat:"利尿降压药(保钾)", alias:["安体舒通","spironolactone"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"螺内酯保钾，大量香蕉/橙汁/盐替代品极易高钾，严重可心跳骤停。高钾食物要严格限量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃太咸减弱药效。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草致低钾，但螺内酯保钾，二者复杂，遵医嘱。"}]},
+
+  {name:"吲达帕胺", cat:"利尿降压药", alias:["钠催离","indapamide"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"可能低钾，适量香蕉可补钾。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"控盐。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"地尔硫卓", cat:"降压药(钙拮抗剂)", alias:["合心爽","diltiazem"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚大幅升高血药浓度，易低血压、心率慢，避免。"},
+          {t:"香蕉(高钾)",type:"food",sev:"caution",ev:"B",d:"与地尔硫卓同用可能升高血钾，注意适量。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"维拉帕米", cat:"降压药(钙拮抗剂)", alias:["异搏定","verapamil"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚明显升高维拉帕米浓度，风险高，避免。"},
+          {t:"香蕉(高钾)",type:"food",sev:"caution",ev:"B",d:"可能升高血钾，适量。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"理论轻微影响，常规无碍。"}]},
+
+  {name:"利伐沙班", cat:"新型抗凝药", alias:["拜瑞妥","rivaroxaban"],
+   inter:[{t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"圣约翰草降低利伐沙班疗效，增加血栓风险，禁用。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚可能升高浓度，建议少吃。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"抗凝叠加，出血风险升，适量。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"增加出血与胃肠刺激。"}]},
+
+  {name:"替米沙坦", cat:"降压药(ARB)", alias:["telmisartan"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"沙坦类保钾，大量香蕉/橙汁/盐替代品易高钾，适量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃咸减弱药效，控盐。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草升血压致低钾，抵消药效。"}]},
+
+  {name:"厄贝沙坦", cat:"降压药(ARB)", alias:["安博维","irbesartan"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"沙坦类保钾，大量高钾食物易高钾，适量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"控盐。"},
+          {t:"布洛芬",type:"drug",sev:"caution",ev:"B",d:"布洛芬减弱降压并伤肾，尽量少用。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"奥美沙坦", cat:"降压药(ARB)", alias:["olmesartan"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"沙坦类保钾，大量高钾食物易高钾，适量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"控盐。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  {name:"卡托普利", cat:"降压药(ACEI)", alias:["开博通","captopril"],
+   inter:[{t:"香蕉(高钾)",type:"food",sev:"avoid",ev:"A",d:"普利类保钾，大量高钾食物易高钾，适量。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"吃咸药效差，控盐。"},
+          {t:"布洛芬",type:"drug",sev:"caution",ev:"B",d:"布洛芬减弱降压伤肾，避开。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压。"}]},
+
+  // ---------- 降糖 ----------
+  {name:"二甲双胍", cat:"降糖药", alias:["格华止","metformin"],
+   inter:[{t:"维生素B12",type:"nutrient",sev:"watch",ev:"B",d:"长期用二甲双胍可能缺B12，建议每年查一次，必要时补。"},
+          {t:"酒精",type:"food",sev:"avoid",ev:"A",d:"喝酒可能诱发乳酸酸中毒（少见但危险），且易低血糖，尽量不喝酒。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"钙剂略影响吸收，分开吃即可。"},
+          {t:"膳食纤维",type:"nutrient",sev:"ok",ev:"B",d:"高纤维有助控糖，配合用药更好，注意多喝水。"}]},
+
+  {name:"格列美脲", cat:"降糖药(磺脲类)", alias:["亚莫利","glimepiride"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"喝酒可致严重低血糖、面红心慌，严禁。"},
+          {t:"膳食纤维",type:"nutrient",sev:"watch",ev:"B",d:"高纤维延缓糖吸收，血糖更平稳，留意低血糖。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"C",d:"可能增强降糖致低血糖，少量。"}]},
+
+  {name:"格列齐特", cat:"降糖药(磺脲类)", alias:["达美康","gliclazide"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"磺脲类+酒=严重低血糖，严禁饮酒。"},
+          {t:"膳食纤维",type:"nutrient",sev:"watch",ev:"B",d:"有助控糖，留意低血糖。"}]},
+
+  {name:"阿卡波糖", cat:"降糖药(糖苷酶抑制)", alias:["拜糖平","acarbose"],
+   inter:[{t:"膳食纤维",type:"nutrient",sev:"ok",ev:"B",d:"与阿卡波糖协同控糖，宜搭配。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"大量钙可能影响，常规无碍。"},
+          {t:"铁",type:"nutrient",sev:"watch",ev:"C",d:"长期可能影响铁吸收，留意贫血。"}]},
+
+  {name:"胰岛素", cat:"降糖药", alias:["insulin"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"喝酒掩盖低血糖症状（心慌手抖被酒盖住），极危险，严格限酒。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡升血糖，可能需调剂量，别当水喝。"},
+          {t:"膳食纤维",type:"nutrient",sev:"ok",ev:"B",d:"高纤维平稳血糖，推荐。"}]},
+
+  {name:"达格列净", cat:"降糖药(SGLT2)", alias:["安达唐","empagliflozin"],
+   inter:[{t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"此类药易脱水，天热或腹泻要多喝水，少盐。"},
+          {t:"钾",type:"nutrient",sev:"watch",ev:"B",d:"可能影响血钾，定期复查。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"增加脱水和低血糖风险。"}]},
+
+  {name:"西格列汀", cat:"降糖药(DPP-4)", alias:["捷诺维","sitagliptin"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"常规补钙无碍，分开吃。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"饮酒增加低血糖与胰脏负担。"}]},
+
+  {name:"瑞格列奈", cat:"降糖药(格列奈类)", alias:["诺和龙","repaglinide"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚增强降糖，易低血糖，少吃。"},
+          {t:"酒精",type:"food",sev:"avoid",ev:"A",d:"严禁饮酒，防严重低血糖。"}]},
+
+  // ---------- 抗生素 ----------
+  {name:"阿莫西林", cat:"抗生素(青霉素类)", alias:["amoxicillin"],
+   inter:[{t:"益生菌",type:"nutrient",sev:"caution",ev:"B",d:"抗生素杀益生菌，建议间隔2小时再吃益生菌，否则白吃。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"钙剂略降吸收，分开吃。"},
+          {t:"奶制品",type:"food",sev:"watch",ev:"B",d:"牛奶略影响吸收，服药与喝牛奶隔开1-2小时。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"伤肝、易腹泻，用药期间不喝酒。"}]},
+
+  {name:"头孢克洛", cat:"抗生素(头孢类)", alias:["cefaclor"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"钙剂隔开吃。"},
+          {t:"奶制品",type:"food",sev:"watch",ev:"B",d:"牛奶隔开1-2小时。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"部分头孢饮酒有面红心慌（双硫仑样），用药期间及停药后3天不喝酒。"}]},
+
+  {name:"左氧氟沙星", cat:"抗生素(喹诺酮类)", alias:["可乐必妥","levofloxacin"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"钙、铁、镁、锌会与喹诺酮螯合，药效几乎全失。补钙/铁/镁要隔开至少2小时（最好4小时）。"},
+          {t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"同钙，必须隔开。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"含镁的胃药（如达喜）也会螯合，隔开。"},
+          {t:"锌",type:"nutrient",sev:"avoid",ev:"A",d:"锌制剂同样隔开。"},
+          {t:"奶制品",type:"food",sev:"avoid",ev:"A",d:"牛奶、酸奶、奶酪含大量钙，服药前后2小时不吃。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"A",d:"喹诺酮阻碍咖啡因代谢，易心慌、失眠甚至抽搐，少喝咖啡浓茶。"}]},
+
+  {name:"环丙沙星", cat:"抗生素(喹诺酮类)", alias:["ciprofloxacin"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"隔开2-4小时，否则药效大减。"},
+          {t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"隔开。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"含镁胃药隔开。"},
+          {t:"奶制品",type:"food",sev:"avoid",ev:"A",d:"牛奶隔开2小时。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"可能加重咖啡因副作用，少喝。"},
+          {t:"茶碱",type:"drug",sev:"caution",ev:"B",d:"升高茶碱浓度，哮喘患者留意。"}]},
+
+  {name:"莫西沙星", cat:"抗生素(喹诺酮类)", alias:["拜复乐","moxifloxacin"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"隔开2-4小时。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"隔开，且莫西沙星本身可能延长心电图QT，低镁更危险。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"少喝咖啡浓茶。"}]},
+
+  {name:"克拉霉素", cat:"抗生素(大环内酯类)", alias:["clarithromycin"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高克拉霉素浓度，增加副作用，少吃。"},
+          {t:"益生菌",type:"nutrient",sev:"caution",ev:"B",d:"隔开2小时吃益生菌。"},
+          {t:"钾",type:"nutrient",sev:"watch",ev:"B",d:"克拉霉素可延长QT，低钾更危险，留意血钾。"}]},
+
+  {name:"阿奇霉素", cat:"抗生素(大环内酯类)", alias:["希舒美","azithromycin"],
+   inter:[{t:"钾",type:"nutrient",sev:"watch",ev:"B",d:"阿奇霉素可延长QT，低钾者注意补钾、查心电图。"},
+          {t:"益生菌",type:"nutrient",sev:"caution",ev:"B",d:"隔开2小时。"}]},
+
+  {name:"甲硝唑", cat:"抗生素(抗厌氧菌)", alias:["灭滴灵","metronidazole"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"甲硝唑+酒=剧烈面红、呕吐、心慌（双硫仑样反应），用药期间及停药后3天绝对禁酒。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍，隔开吃。"}]},
+
+  {name:"多西环素", cat:"抗生素(四环素类)", alias:["doxycycline"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"钙、铁、镁、锌螯合多西环素，药效大减，必须隔开2-4小时。"},
+          {t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"隔开。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"隔开。"},
+          {t:"奶制品",type:"food",sev:"avoid",ev:"A",d:"牛奶、钙片隔开2小时。"},
+          {t:"益生菌",type:"nutrient",sev:"caution",ev:"B",d:"隔开2小时。"}]},
+
+  {name:"红霉素", cat:"抗生素(大环内酯类)", alias:["erythromycin"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高红霉素浓度，少吃。"},
+          {t:"茶碱",type:"drug",sev:"caution",ev:"B",d:"升高茶碱浓度，哮喘患者留意剂量。"},
+          {t:"益生菌",type:"nutrient",sev:"caution",ev:"B",d:"隔开2小时。"}]},
+
+  // ---------- 止痛 / 抗炎 ----------
+  {name:"布洛芬", cat:"解热镇痛(NSAID)", alias:["芬必得","ibuprofen"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"布洛芬伤胃，喝酒胃出血风险大增，绝对别同用。"},
+          {t:"香蕉(高钾)",type:"food",sev:"caution",ev:"B",d:"布洛芬伤肾、升血钾，若同时在吃普利/沙坦/螺内酯，高钾风险更高。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"叠加抗凝，出血风险升，适量。"},
+          {t:"姜黄",type:"food",sev:"caution",ev:"B",d:"姜黄也影响血小板，叠加注意。"}]},
+
+  {name:"双氯芬酸", cat:"解热镇痛(NSAID)", alias:["扶他林","diclofenac"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"伤胃出血风险高，禁酒。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"出血风险叠加。"},
+          {t:"姜黄",type:"food",sev:"caution",ev:"B",d:"注意出血。"}]},
+
+  {name:"塞来昔布", cat:"解热镇痛(NSAID)", alias:["西乐葆","celecoxib"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"仍伤胃，限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"C",d:"少量无碍，避免大量。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"出血风险叠加。"}]},
+
+  {name:"对乙酰氨基酚", cat:"解热镇痛", alias:["泰诺林","扑热息痛","paracetamol"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"对乙酰氨基酚+酒伤肝，可致肝衰竭，感冒药多含此成分，喝酒期间别乱吃。"},
+          {t:"圣约翰草",type:"nutrient",sev:"caution",ev:"C",d:"可能加速其代谢，留意。"}]},
+
+  {name:"曲马多", cat:"中枢镇痛药", alias:["tramadol"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"曲马多+酒抑制呼吸，可致命，严禁。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"同用可致5-羟色胺综合征（高热、抽搐），禁用。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"吗啡", cat:"强效镇痛药", alias:["morphine"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"吗啡+酒严重抑制呼吸，致命，严禁。"},
+          {t:"膳食纤维",type:"nutrient",sev:"watch",ev:"B",d:"吗啡易便秘，高纤维有助缓解，多喝水。"}]},
+
+  {name:"泼尼松", cat:"糖皮质激素", alias:["强的松","prednisone"],
+   inter:[{t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"长期用激素丢钙、易骨质疏松，必须补钙+维D，并查骨密度。"},
+          {t:"维生素D",type:"nutrient",sev:"watch",ev:"B",d:"配合钙一起补，防骨折。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"激素致水钠潴留、升血压，要控盐。"},
+          {t:"钾",type:"nutrient",sev:"caution",ev:"B",d:"激素致低钾，适量香蕉补钾。"},
+          {t:"甘草",type:"food",sev:"caution",ev:"B",d:"甘草也致低钾，叠加更明显。"}]},
+
+  // ---------- 精神 / 情绪 ----------
+  {name:"舍曲林", cat:"抗抑郁药(SSRI)", alias:["左洛复","sertraline"],
+   inter:[{t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"圣约翰草也是抗抑郁草藥，同用致5-羟色胺综合征，禁用。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"降低药效、加重抑郁，限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高血药浓度，少吃。"}]},
+
+  {name:"氟西汀", cat:"抗抑郁药(SSRI)", alias:["百忧解","fluoxetine"],
+   inter:[{t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"禁用，防5-羟色胺综合征。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"少吃。"}]},
+
+  {name:"帕罗西汀", cat:"抗抑郁药(SSRI)", alias:["赛乐特","paroxetine"],
+   inter:[{t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"禁用。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"少吃。"}]},
+
+  {name:"阿米替林", cat:"抗抑郁药(三环类)", alias:["amitriptyline"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"阿米替林+酒极度嗜睡、呼吸抑制，严禁。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"禁用，防5-羟色胺综合征。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高浓度，少吃。"}]},
+
+  {name:"多塞平", cat:"抗抑郁药(三环类)", alias:["doxepin"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"严禁同用，嗜睡呼吸抑制。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"禁用。"}]},
+
+  {name:"地西泮", cat:"安眠镇静药", alias:["安定","diazepam"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"安定+酒严重嗜睡、跌倒、呼吸抑制，严禁。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚延长药效，易次日昏沉，少吃。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡拮抗安眠，白天别靠咖啡硬扛，晚上更睡不着。"}]},
+
+  {name:"阿普唑仑", cat:"安眠镇静药", alias:["佳静安定","alprazolam"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"严禁，呼吸抑制风险。"},
+          {t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚大幅升高阿普唑仑浓度，次日仍昏沉易跌倒，避免。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡拮抗药效。"}]},
+
+  {name:"劳拉西泮", cat:"安眠镇静药", alias:["氯硝安定","lorazepam"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"严禁同用。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡拮抗。"}]},
+
+  {name:"米氮平", cat:"抗抑郁药", alias:["瑞美隆","mirtazapine"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"加重嗜睡，限酒。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"禁用。"}]},
+
+  {name:"喹硫平", cat:"抗精神病药", alias:["思瑞康","quetiapine"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"加重嗜睡头晕，限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高浓度，少吃。"}]},
+
+  {name:"奥氮平", cat:"抗精神病药", alias:["再普乐","olanzapine"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"C",d:"少量无碍。"}]},
+
+  {name:"锂盐", cat:"情绪稳定剂", alias:["碳酸锂","lithium"],
+   inter:[{t:"钠/盐",type:"nutrient",sev:"avoid",ev:"A",d:"吃太淡（低钠）会让锂蓄积中毒（手抖、呕吐、肾伤）。盐要稳定，别突然节食低盐或狂喝淡茶。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡促锂排泄，喝太多药效降；忽多忽少不稳，适量固定。"},
+          {t:"布洛芬",type:"drug",sev:"avoid",ev:"A",d:"布洛芬减少锂排泄，血锂飙升中毒，退烧止痛避开布洛芬。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"锂影响钾，留意电解质。"}]},
+
+  {name:"丙戊酸钠", cat:"抗癫痫/情绪稳定", alias:["德巴金","valproic"],
+   inter:[{t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"大量咖啡可能降低丙戊酸浓度，适量固定。"},
+          {t:"鱼油(ω-3)",type:"nutrient",sev:"caution",ev:"B",d:"出血风险叠加，适量。"},
+          {t:"维生素D",type:"nutrient",sev:"watch",ev:"B",d:"长期用注意骨密度，补维D+钙。"}]},
+
+  // ---------- 神经 / 帕金森 / 抗癫痫 ----------
+  {name:"左旋多巴", cat:"帕金森药", alias:["多巴丝肼","levodopa"],
+   inter:[{t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"铁剂与左旋多巴螯合，药效大减。补铁要隔开至少2小时（最好餐前药、睡前铁）。"},
+          {t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"钙剂略影响吸收，隔开吃。"},
+          {t:"蛋白质/高蛋白饮食",type:"food",sev:"caution",ev:"A",d:"大量肉蛋奶与左旋多巴竞争吸收，建议服药与正餐错开（餐前1小时或餐后2小时）。"},
+          {t:"维生素B6",type:"nutrient",sev:"avoid",ev:"A",d:"B6会加速左旋多巴代谢、抵消疗效，避免大剂量B6（复合B族含B6要问医生）。"},
+          {t:"大豆制品",type:"food",sev:"caution",ev:"B",d:"豆制品属高蛋白，同蛋白质规则，适量并与药隔开。"}]},
+
+  {name:"普拉克索", cat:"帕金森药", alias:["森福罗","pramipexole"],
+   inter:[{t:"铁",type:"nutrient",sev:"watch",ev:"C",d:"隔开吃更稳妥。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"卡马西平", cat:"抗癫痫药", alias:["得理多","carbamazepine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高卡马西平浓度，易中毒（头晕、复视），少吃。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"长期用影响骨，补维D+钙。"},
+          {t:"维生素D",type:"nutrient",sev:"watch",ev:"B",d:"防骨质疏松。"},
+          {t:"叶酸",type:"nutrient",sev:"watch",ev:"B",d:"长期用可能缺叶酸，留意。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"降低卡马西平疗效，发作风险升，禁用。"}]},
+
+  {name:"苯妥英钠", cat:"抗癫痫药", alias:["大仑丁","phenytoin"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"长期用影响骨，补维D+钙。"},
+          {t:"叶酸",type:"nutrient",sev:"avoid",ev:"B",d:"叶酸降低苯妥英浓度、诱发发作，大剂量叶酸要谨慎并监测。"},
+          {t:"维生素D",type:"nutrient",sev:"watch",ev:"B",d:"防骨松。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"降低疗效，禁用。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高浓度，少吃。"}]},
+
+  {name:"加巴喷丁", cat:"抗癫痫/神经痛", alias:["gabapentin"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"隔开吃。"},
+          {t:"铁",type:"nutrient",sev:"watch",ev:"C",d:"隔开吃。"}]},
+
+  {name:"普瑞巴林", cat:"抗癫痫/神经痛", alias:["乐瑞卡","pregabalin"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"加重头晕嗜睡、易跌倒，限酒。"},
+          {t:"膳食纤维",type:"nutrient",sev:"ok",ev:"C",d:"常规无碍。"}]},
+
+  {name:"苯巴比妥", cat:"抗癫痫药", alias:["phenobarbital"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"长期用骨密度下降，补维D+钙。"},
+          {t:"叶酸",type:"nutrient",sev:"watch",ev:"B",d:"可能缺乏叶酸。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"降低疗效，禁用。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡拮抗镇静，且巴比妥加速咖啡因代谢。"}]},
+
+  {name:"艾司唑仑", cat:"安眠镇静药", alias:["舒乐安定","estazolam"],
+   inter:[{t:"酒精",type:"food",sev:"avoid",ev:"A",d:"严禁，呼吸抑制、跌倒。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚延长药效，少吃。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"咖啡拮抗。"}]},
+
+  // ---------- 甲状腺 / 消化 ----------
+  {name:"左甲状腺素", cat:"甲状腺药", alias:["优甲乐","levothyroxine"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"钙片、含钙胃药会牢牢绑定左甲状腺素，药效大减。必须隔开至少4小时（通常晨起空腹服药，睡前补钙）。"},
+          {t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"铁剂同样大幅降低吸收，隔开4小时。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"含镁的胃药/补充剂也影响吸收，隔开4小时。"},
+          {t:"高膳食纤维",type:"nutrient",sev:"caution",ev:"B",d:"大量麸皮、杂粮纤维吸附药物，药与高纤餐隔开。"},
+          {t:"大豆制品",type:"food",sev:"caution",ev:"B",d:"大豆（豆浆、豆腐）影响吸收，大量吃要隔开、并复查甲功。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"avoid",ev:"A",d:"咖啡、浓茶明显妨碍吸收，服药后至少30-60分钟再喝。"},
+          {t:"奶制品",type:"food",sev:"caution",ev:"B",d:"牛奶含钙，隔开。"}]},
+
+  {name:"奥美拉唑", cat:"胃药(PPI)", alias:["洛赛克","omeprazole"],
+   inter:[{t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"长期用PPI减少钙吸收，增加骨折风险，注意补钙+维D。"},
+          {t:"镁",type:"nutrient",sev:"caution",ev:"B",d:"长期用可能低镁，抽筋、心慌要查血镁。"},
+          {t:"维生素B12",type:"nutrient",sev:"watch",ev:"B",d:"长期用影响B12吸收，每年查一次。"},
+          {t:"铁",type:"nutrient",sev:"watch",ev:"B",d:"胃酸少影响铁吸收，留意贫血。"},
+          {t:"益生菌",type:"nutrient",sev:"ok",ev:"B",d:"吃益生菌无冲突，反而有助肠道。"}]},
+
+  {name:"泮托拉唑", cat:"胃药(PPI)", alias:["pantoprazole"],
+   inter:[{t:"镁",type:"nutrient",sev:"caution",ev:"B",d:"长期用留意低镁。"},
+          {t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"长期用留意骨密度。"},
+          {t:"维生素B12",type:"nutrient",sev:"watch",ev:"B",d:"长期用留意B12。"}]},
+
+  {name:"雷贝拉唑", cat:"胃药(PPI)", alias:["rabeprazole"],
+   inter:[{t:"镁",type:"nutrient",sev:"caution",ev:"B",d:"长期用留意低镁。"},
+          {t:"钙",type:"nutrient",sev:"caution",ev:"B",d:"长期用留意骨密度。"}]},
+
+  {name:"法莫替丁", cat:"胃药(替丁类)", alias:["高舒达","famotidine"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"隔开吃更稳妥。"},
+          {t:"益生菌",type:"nutrient",sev:"ok",ev:"B",d:"无冲突。"}]},
+
+  {name:"多潘立酮", cat:"胃药(促动力)", alias:["吗丁啉","domperidone"],
+   inter:[{t:"钾",type:"nutrient",sev:"avoid",ev:"A",d:"多潘立酮可延长心电图QT，低钾时风险高，避免与排钾利尿剂同用且不补钾过量。"},
+          {t:"圣约翰草",type:"nutrient",sev:"caution",ev:"C",d:"可能影响代谢，留意。"}]},
+
+  {name:"莫沙必利", cat:"胃药(促动力)", alias:["加斯清","mosapride"],
+   inter:[{t:"益生菌",type:"nutrient",sev:"ok",ev:"B",d:"无明确冲突。"}]},
+
+  {name:"乳果糖", cat:"通便药", alias:["lactulose"],
+   inter:[{t:"益生菌",type:"nutrient",sev:"ok",ev:"B",d:"与益生菌协同，改善肠道，可同用。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  // ---------- 呼吸 ----------
+  {name:"茶碱", cat:"平喘药", alias:["theophylline"],
+   inter:[{t:"咖啡因(咖啡/茶)",type:"food",sev:"avoid",ev:"A",d:"茶碱与咖啡/茶/可乐同属兴奋剂，叠加易心悸、失眠、抽搐，严格少喝。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高茶碱浓度，易中毒，少吃。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"降低茶碱疗效，哮喘控制差，禁用。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"B",d:"低钾时茶碱毒性增，适量香蕉稳钾。"}]},
+
+  {name:"氨茶碱", cat:"平喘药", alias:["aminophylline"],
+   inter:[{t:"咖啡因(咖啡/茶)",type:"food",sev:"avoid",ev:"A",d:"同茶碱，叠加兴奋中毒，少喝。"},
+          {t:"柚子(西柚)",type:"food",sev:"caution",ev:"B",d:"西柚升高浓度，少吃。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"B",d:"降低疗效。"}]},
+
+  {name:"孟鲁司特", cat:"平喘药", alias:["顺尔宁","montelukast"],
+   inter:[{t:"圣约翰草",type:"nutrient",sev:"watch",ev:"C",d:"理论略降，常规无碍。"}]},
+
+  {name:"沙丁胺醇", cat:"平喘药(支气管扩张)", alias:["舒喘灵","salbutamol"],
+   inter:[{t:"钾",type:"nutrient",sev:"caution",ev:"B",d:"沙丁胺醇可致低钾（尤其雾化量大时），适量补钾、查血钾。"},
+          {t:"咖啡因(咖啡/茶)",type:"food",sev:"caution",ev:"B",d:"叠加心悸，适量。"}]},
+
+  // ---------- 骨骼 / 痛风 ----------
+  {name:"阿仑膦酸钠", cat:"骨质疏松药", alias:["福善美","alendronate"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"钙片、牛奶会绑定双膦酸盐，药效全无。必须隔开至少30分钟到2小时（通常晨起空腹白水送服，餐后再补钙）。"},
+          {t:"铁",type:"nutrient",sev:"avoid",ev:"A",d:"铁剂同样隔开。"},
+          {t:"镁",type:"nutrient",sev:"avoid",ev:"A",d:"含镁补充剂隔开。"},
+          {t:"奶制品",type:"food",sev:"avoid",ev:"A",d:"牛奶等高钙食物服药前后隔开。"}]},
+
+  {name:"骨化三醇", cat:"骨质疏松药(活性维D)", alias:["罗盖全","calcitriol"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"骨化三醇促进钙吸收，与大量钙同用易高钙血症（恶心、肾结石），补钙要严格遵医嘱定量。"},
+          {t:"镁",type:"nutrient",sev:"caution",ev:"B",d:"防高镁，定期查。"},
+          {t:"钠/盐",type:"nutrient",sev:"caution",ev:"B",d:"高盐促钙排泄，抵消药效。"}]},
+
+  {name:"阿法骨化醇", cat:"骨质疏松药(活性维D)", alias:["alfacalcidol"],
+   inter:[{t:"钙",type:"nutrient",sev:"avoid",ev:"A",d:"同骨化三醇，防高钙，定量补钙。"},
+          {t:"镁",type:"nutrient",sev:"caution",ev:"B",d:"定期查镁。"}]},
+
+  {name:"别嘌醇", cat:"痛风药", alias:["allopurinol"],
+   inter:[{t:"维生素C",type:"nutrient",sev:"watch",ev:"B",d:"大剂量维C可能影响尿酸，常规剂量无碍。"},
+          {t:"酒精",type:"food",sev:"caution",ev:"B",d:"酒升尿酸、诱发痛风，限酒。"},
+          {t:"钠/盐",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"非布司他", cat:"痛风药", alias:["febuxostat"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"限酒，防痛风发作。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"秋水仙碱", cat:"痛风急性发作药", alias:["colchicine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚大幅升高秋水仙碱浓度，可致严重中毒（腹泻、骨髓抑制），避免西柚。"},
+          {t:"圣约翰草",type:"nutrient",sev:"caution",ev:"C",d:"可能影响代谢。"}]},
+
+  // ---------- 抗过敏 / 其他 ----------
+  {name:"氯雷他定", cat:"抗过敏药", alias:["开瑞坦","loratadine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"watch",ev:"C",d:"少量无碍。"},
+          {t:"钾",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"西替利嗪", cat:"抗过敏药", alias:["仙特明","cetirizine"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"加重嗜睡，吃药当天别喝酒。"},
+          {t:"香蕉(高钾)",type:"food",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"甲氨蝶呤", cat:"免疫抑制剂/抗肿瘤", alias:["methotrexate"],
+   inter:[{t:"叶酸",type:"nutrient",sev:"caution",ev:"A",d:"医生常开叶酸/亚叶酸减轻甲氨蝶呤毒性（护肝护黏膜），但自行大剂量食补叶酸可能削弱疗效，须遵医嘱定时定量。"},
+          {t:"酒精",type:"food",sev:"avoid",ev:"A",d:"甲氨蝶呤伤肝，喝酒肝毒性大增，严禁。"},
+          {t:"钙",type:"nutrient",sev:"watch",ev:"B",d:"长期用留意骨。"}]},
+
+  {name:"坦索罗辛", cat:"前列腺药", alias:["哈乐","tamsulosin"],
+   inter:[{t:"酒精",type:"food",sev:"caution",ev:"B",d:"易低血压头晕，限酒。"},
+          {t:"柚子(西柚)",type:"food",sev:"watch",ev:"C",d:"少量无碍。"}]},
+
+  {name:"非那雄胺", cat:"前列腺药", alias:["保列治","finasteride"],
+   inter:[{t:"钙",type:"nutrient",sev:"watch",ev:"C",d:"常规无碍。"}]},
+
+  {name:"环孢素", cat:"免疫抑制剂", alias:["cyclosporine"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚大幅升高环孢素浓度，肾毒性、中毒风险高，严格避免。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"A",d:"圣约翰草大幅降低环孢素，移植后排异风险极高，绝对禁用。"},
+          {t:"钾",type:"nutrient",sev:"caution",ev:"B",d:"环孢素保钾，留意高钾。"},
+          {t:"香蕉(高钾)",type:"food",sev:"caution",ev:"B",d:"适量，防高钾。"}]},
+
+  {name:"他克莫司", cat:"免疫抑制剂", alias:["tacrolimus"],
+   inter:[{t:"柚子(西柚)",type:"food",sev:"avoid",ev:"A",d:"西柚升高浓度致中毒肾损，严格避免。"},
+          {t:"圣约翰草",type:"nutrient",sev:"avoid",ev:"A",d:"降低他克莫司，排异风险高，禁用。"},
+          {t:"钾",type:"nutrient",sev:"caution",ev:"B",d:"保钾，留意高钾。"},
+          {t:"香蕉(高钾)",type:"food",sev:"caution",ev:"B",d:"适量。"}]},
+];
+
+/* 营养素/食物 释义（用于营养素端口顶部说明） */
+const NUT_INFO = {
+  "钙":"骨骼与牙齿主要成分，也参与神经肌肉。过量或时机不对会绑定多种药物使之失效。",
+  "铁":"造血必需。铁剂与多种抗生素、甲状腺药、帕金森药螯合，必须隔开服用。",
+  "镁":"参与300多种酶反应。长期用某些胃药、利尿剂可致低镁。",
+  "钾":"维持心跳与肌肉。保钾药+高钾食物=高钾血症，危及生命。",
+  "钠/盐":"摄入过多升血压、抵消降压药；过低（低钠）又会让锂蓄积中毒。",
+  "维生素K":"促进凝血，会抵消华法林等抗凝药。深绿蔬菜含量高，量要稳定。",
+  "维生素D":"促钙吸收。长期用激素、抗癫痫药者易缺乏，需补充。",
+  "维生素B12":"神经与造血必需。长期二甲双胍、胃药者易缺乏。",
+  "维生素B6":"大剂量会抵消左旋多巴（帕金森药）疗效。",
+  "叶酸":"大剂量食补可能削弱甲氨蝶呤、苯妥英钠疗效。",
+  "维生素C":"常规剂量安全；大剂量与个别药物需注意。",
+  "辅酶Q10":"他汀可能降低体内水平，补充或可缓解肌肉不适。",
+  "鱼油(ω-3)":"有轻度抗凝倾向，与抗凝/抗血小板药叠加出血风险。",
+  "益生菌":"抗生素会杀灭益生菌，应隔开2小时服用。",
+  "膳食纤维":"高纤维可吸附、延缓多种药物吸收，与药隔开为宜。",
+  "蛋白质/高蛋白饮食":"大量肉蛋奶与左旋多巴竞争吸收，需错开服药时间。",
+  "柚子(西柚)":"含呋喃香豆素，强力干扰肝药酶，升高多种药浓度，风险极高。",
+  "绿叶蔬菜(维K)":"维K丰富，影响华法林，量要稳定。",
+  "奶制品":"含钙，绑定多种抗生素、甲状腺药、骨质疏松药，需隔开。",
+  "酒精":"与解热镇痛、抗凝、镇静、降糖药同用风险极大，多数应禁酒。",
+  "咖啡因(咖啡/茶)":"兴奋剂，与平喘药、镇静药、锂盐等相互作用明显，适量固定。",
+  "香蕉(高钾)":"高钾水果，与保钾药同用警惕高钾血症。",
+  "甘草":"致低钾、升血压，抵消多种降压药。",
+  "圣约翰草(贯叶连翘)":"强效肝药酶诱导剂，降低多种处方药疗效，多数禁用。",
+  "银杏":"轻度抗凝，与抗凝/抗血小板药叠加出血风险。",
+  "姜黄":"影响血小板，与抗凝/止痛药叠加注意出血。",
+  "大蒜":"轻度抗凝，手术前及与抗凝药同用注意。",
+  "大豆制品":"高蛋白且影响甲状腺药吸收，与左旋多巴、优甲乐隔开。",
+  "红曲":"含天然他汀，与他汀药叠加等于过量。",
+  "纳豆":"维K极高，明显减弱华法林。",
+  "蔓越莓":"大量可能增强抗凝。",
+  "西地那非类(壮阳药)":"与硝酸酯类（硝酸甘油）同用可致致命低血压，严禁。"
+};
+
+/* ================= 逻辑 ================= */
+const SEV_LABEL={avoid:"避免同服",caution:"谨慎/隔开",watch:"注意",ok:"通常无碍"};
+const SEV_CLASS={avoid:"avoid",caution:"caution",watch:"watch",ok:"ok"};
+const EV_LABEL={A:"A 强证据",B:"B 中等证据",C:"C 理论/个案"};
+const TYPE_LABEL={food:"食物",nutrient:"营养素",drug:"药物组合警示"};
+
+let drugSel=null, nutSel=null;
+
+function switchTab(which){
+  document.getElementById('tabDrug').classList.toggle('active',which==='drug');
+  document.getElementById('tabNut').classList.toggle('active',which==='nut');
+  document.getElementById('panelDrug').classList.toggle('active',which==='drug');
+  document.getElementById('panelNut').classList.toggle('active',which==='nut');
+}
+
+function norm(s){return (s||'').toLowerCase().trim();}
+
+function buildCatOptions(){
+  const cats=[...new Set(DRUGS.map(d=>d.cat))].sort();
+  const sel=document.getElementById('drugCat');
+  sel.innerHTML='<option value="">全部类别</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function renderDrugList(){
+  const q=norm(document.getElementById('drugSearch').value);
+  const cat=document.getElementById('drugCat').value;
+  const list=DRUGS.filter(d=>{
+    if(cat && d.cat!==cat) return false;
+    if(!q) return true;
+    return norm(d.name).includes(q) || norm(d.cat).includes(q) ||
+           (d.alias||[]).some(a=>norm(a).includes(q));
+  });
+  document.getElementById('drugCount').textContent=`共 ${list.length} 种药物`;
+  const box=document.getElementById('drugList');
+  box.innerHTML = list.length? list.map(d=>{
+    const sel = drugSel && drugSel.name===d.name ? ' sel':'';
+    return `<div class="item${sel}" onclick="selectDrug('${d.name}')">
+      <span>${d.name}</span><span class="cat">${d.cat}</span></div>`;
+  }).join('') : '<div class="hint">未找到匹配药物，换个词试试。</div>';
+}
+
+function selectDrug(name){
+  drugSel=DRUGS.find(d=>d.name===name);
+  renderDrugList();
+  const box=document.getElementById('drugDetail');
+  if(!drugSel){box.innerHTML='<div class="hint">请选择药物。</div>';return;}
+  const d=drugSel;
+  const alias=(d.alias||[]).filter(a=>a!==d.name).join('、');
+  let html=`<h2>${d.name}</h2><div class="sub">类别：${d.cat}${alias?` ｜ 别名/英文：${alias}`:''}</div>`;
+  if(!d.inter.length){html+='<div class="hint">暂无收录的相互作用。</div>';}
+  else{
+    html+='<p style="margin:6px 0 4px;color:#444;font-size:17px;">以下为与食物、营养素的相互作用（按风险排序）：</p>';
+    const order={avoid:0,caution:1,watch:2,ok:3};
+    const arr=[...d.inter].sort((a,b)=>order[a.sev]-order[b.sev]);
+    html+=arr.map(it=>cardHTML(it)).join('');
+  }
+  box.innerHTML=html;
+}
+
+function cardHTML(it){
+  return `<div class="card ${SEV_CLASS[it.sev]}">
+    <div class="ttl">${it.t}
+      <span class="badge b-${it.sev}">${SEV_LABEL[it.sev]}</span>
+      <span class="badge b-ev${it.ev}">${EV_LABEL[it.ev]}</span>
+    </div>
+    <div class="desc">${it.d}</div>
+    <div class="tags"><span class="tag">类型：${TYPE_LABEL[it.type]||'其他'}</span></div>
+  </div>`;
+}
+
+/* ---- 营养素端口：由药物数据反向索引 ---- */
+function buildNutIndex(){
+  const map={};
+  DRUGS.forEach(d=>{
+    (d.inter||[]).forEach(it=>{
+      if(!map[it.t]) map[it.t]=[];
+      map[it.t].push({drug:d.name,cat:d.cat,sev:it.sev,ev:it.ev,d:it.d,type:it.type});
+    });
+  });
+  return map;
+}
+const NUT_INDEX=buildNutIndex();
+
+function renderNutList(){
+  const q=norm(document.getElementById('nutSearch').value);
+  const keys=Object.keys(NUT_INDEX).filter(k=> !q || norm(k).includes(q));
+  // 排序：冲突数多者优先
+  keys.sort((a,b)=> NUT_INDEX[b].length - NUT_INDEX[a].length);
+  document.getElementById('nutCount').textContent=`共 ${keys.length} 种营养素/食物`;
+  const box=document.getElementById('nutList');
+  box.innerHTML = keys.length? keys.map(k=>{
+    const sel = nutSel===k ? ' sel':'';
+    const n=NUT_INDEX[k].length;
+    return `<div class="item${sel}" onclick="selectNut('${k}')">
+      <span>${k}</span><span class="cat">${n} 种药</span></div>`;
+  }).join('') : '<div class="hint">未找到，换个词试试（如 钙、铁、柚子、咖啡）。</div>';
+}
+
+function selectNut(k){
+  nutSel=k;
+  renderNutList();
+  const box=document.getElementById('nutDetail');
+  const list=NUT_INDEX[k]||[];
+  const info=NUT_INFO[k]?`<p style="background:#eef3f0;border-radius:10px;padding:10px 12px;font-size:18px;color:#444;">📌 ${NUT_INFO[k]}</p>`:'';
+  let html=`<h2>${k}</h2><div class="sub">共有 ${list.length} 种药物与它存在相互作用（按风险排序）</div>${info}`;
+  const order={avoid:0,caution:1,watch:2,ok:3};
+  const arr=[...list].sort((a,b)=>order[a.sev]-order[b.sev]);
+  html+=arr.map(it=>{
+    return `<div class="card ${SEV_CLASS[it.sev]}">
+      <div class="ttl">${it.drug}
+        <span class="badge b-${it.sev}">${SEV_LABEL[it.sev]}</span>
+        <span class="badge b-ev${it.ev}">${EV_LABEL[it.ev]}</span>
+      </div>
+      <div class="desc">${it.d}</div>
+      <div class="tags"><span class="tag">类别：${it.cat}</span><span class="tag">类型：${TYPE_LABEL[it.type]||'其他'}</span></div>
+    </div>`;
+  }).join('');
+  box.innerHTML=html;
+}
+
+/* 初始化 */
+buildCatOptions();
+renderDrugList();
+renderNutList();
+</script>
+</body>
+</html>
