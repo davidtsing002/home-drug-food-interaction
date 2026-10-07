@@ -91,6 +91,7 @@
   .card .tags{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
   .tag{font-size:15px; background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:3px 9px; color:var(--ink2);}
   .legend{margin:12px auto 0; max-width:1000px; font-size:16px; color:var(--ink2); background:#fff; border:2px dashed var(--line); border-radius:12px; padding:12px 16px;}
+  #sharedInfo{margin-bottom:14px;}
   .legend .leg-title{font-weight:700; color:var(--ink); margin:8px 0 4px;}
   .legend .leg-title:first-child{margin-top:0;}
   .legend .leg-row{display:flex; align-items:center; gap:10px; padding:4px 0; line-height:1.5;}
@@ -117,7 +118,8 @@
     <div class="tab" id="tabNut" onclick="switchTab('nut')"><span class="emo">🥗</span> 查营养素 / 食物</div>
   </div>
 
-  <!-- 重要提醒 + 说明（两端口共用） -->
+  <!-- 重要提醒 + 说明（两端口共用，JS 会移到当前查询框下方） -->
+  <div id="sharedInfo">
   <div class="notice">
     <b>⚠ 重要提醒：</b>本工具仅作日常参考，<b>不能替代医生或药师的专业指导</b>。药物相互作用因人而异，<b>切勿自行停药、换药或加量</b>。用药有疑问，请务必咨询医师或药师。
   </div>
@@ -131,6 +133,7 @@
     <div class="leg-row"><span class="badge b-evA">A 强证据</span> 大量临床证实</div>
     <div class="leg-row"><span class="badge b-evB">B 中等证据</span> 较多研究 / 病例支持</div>
     <div class="leg-row"><span class="badge b-evC">C 理论/个案</span> 多为推测或个例，需关注</div>
+  </div>
   </div>
 
   <!-- ============ 药物端口 ============ -->
@@ -751,6 +754,16 @@ function switchTab(which){
   document.getElementById('tabNut').classList.toggle('active',which==='nut');
   document.getElementById('panelDrug').classList.toggle('active',which==='drug');
   document.getElementById('panelNut').classList.toggle('active',which==='nut');
+  placeSharedInfo();
+}
+
+// 把共用的「重要提醒 + 等级说明」移动到当前端口的查询框下方
+function placeSharedInfo(){
+  const info=document.getElementById('sharedInfo');
+  const panel=document.querySelector('.panel.active');
+  if(!info||!panel) return;
+  const bar=panel.querySelector('.toolbar');
+  if(bar) bar.after(info);
 }
 
 function norm(s){return (s||'').toLowerCase().trim();}
@@ -862,6 +875,7 @@ function selectNut(k){
 buildCatOptions();
 renderDrugList();
 renderNutList();
+placeSharedInfo();
 </script>
 </body>
 </html>
