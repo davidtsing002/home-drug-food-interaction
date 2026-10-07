@@ -91,7 +91,10 @@
   .card .tags{margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;}
   .tag{font-size:15px; background:var(--pill); border:1px solid var(--line); border-radius:8px; padding:3px 9px; color:var(--ink2);}
   .legend{margin:12px auto 0; max-width:1000px; font-size:16px; color:var(--ink2); background:#fff; border:2px dashed var(--line); border-radius:12px; padding:12px 16px;}
-  .legend b{color:var(--ink);}
+  .legend .leg-title{font-weight:700; color:var(--ink); margin:8px 0 4px;}
+  .legend .leg-title:first-child{margin-top:0;}
+  .legend .leg-row{display:flex; align-items:center; gap:10px; padding:4px 0; line-height:1.5;}
+  .legend .leg-row .badge{flex:0 0 auto;}
   footer{text-align:center; color:#888; font-size:15px; padding:24px 10px 40px;}
   @media (max-width:820px){
     body{font-size:18px;}
@@ -119,15 +122,15 @@
     <b>⚠ 重要提醒：</b>本工具仅作日常参考，<b>不能替代医生或药师的专业指导</b>。药物相互作用因人而异，<b>切勿自行停药、换药或加量</b>。用药有疑问，请务必咨询医师或药师。
   </div>
   <div class="legend">
-    <b>风险等级：</b>
-    <span class="badge b-avoid">避免同服</span> 一起用可能有害，尽量隔开或不用 ·
-    <span class="badge b-caution">谨慎 / 隔开</span> 如需同用请间隔或减量 ·
-    <span class="badge b-watch">注意</span> 一般影响不大，留意即可 ·
-    <span class="badge b-ok">通常无碍</span><br>
-    <b>证据等级：</b>
-    <span class="badge b-evA">A 强证据</span> 大量临床证实 ·
-    <span class="badge b-evB">B 中等证据</span> 较多研究/病例支持 ·
-    <span class="badge b-evC">C 理论/个案</span> 多为推测或个例，需关注
+    <div class="leg-title">风险等级：</div>
+    <div class="leg-row"><span class="badge b-avoid">避免同服</span> 一起用可能有害，尽量隔开或不用</div>
+    <div class="leg-row"><span class="badge b-caution">谨慎 / 隔开</span> 如需同用请间隔或减量</div>
+    <div class="leg-row"><span class="badge b-watch">注意</span> 一般影响不大，留意即可</div>
+    <div class="leg-row"><span class="badge b-ok">通常无碍</span> 一般可同用，影响很小</div>
+    <div class="leg-title">证据等级：</div>
+    <div class="leg-row"><span class="badge b-evA">A 强证据</span> 大量临床证实</div>
+    <div class="leg-row"><span class="badge b-evB">B 中等证据</span> 较多研究 / 病例支持</div>
+    <div class="leg-row"><span class="badge b-evC">C 理论/个案</span> 多为推测或个例，需关注</div>
   </div>
 
   <!-- ============ 药物端口 ============ -->
